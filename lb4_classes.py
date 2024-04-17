@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from collections import Counter
 from math import log10
+from itertools import product
 
 
 class Base:
@@ -24,6 +25,9 @@ class Base:
         print(f'\nКлючевые слова: {', '.join(self._word)}\n'
               f'Количество docs: {self._len_of_docs}\n\n'
               f'{self._df}')
+
+    def check_df(self):
+        return self._df
 
 
 class CreateA(Base):
@@ -64,4 +68,29 @@ class CreateA(Base):
 class CreateB(Base):
     def __init__(self, word, text):
         super().__init__(word, text)
+        self.__configurate_docs()
+        # print(self._docs)
 
+    def __configurate_docs(self):
+        list_of_kw = []
+        for z in self._docs:
+            data = []
+            for word in self._word:
+                doc = z.split()
+                data.append([i for i in range(len(doc)) if doc[i] == word])
+            list_of_kw.append(data)
+        #print(list_of_kw)
+        self._df = list_of_kw
+
+    def make_tuples(self):
+        list_for_sort = []
+        for d in self._df:
+            if all([bool(i) for i in d]):
+                #print(*map(lambda x: tuple(sorted(x)), product(*d)))
+                mas_sum = []
+                for p in map(lambda x: tuple(sorted(x)), product(*d)):
+                    mas_sum.append(sum([p[j] - p[j-1] for j in range(len(p) - 1, 0, -1)]))
+                list_for_sort.append(min(mas_sum))
+            else:
+                list_for_sort.append(self._len_of_docs)
+        self._df = pd.DataFrame(list_for_sort)
